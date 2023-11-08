@@ -1,12 +1,45 @@
 const express = require("express");
-const app = express();
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const app = express();
 const port = process.env.PORT || 5001;
 
-app.use(cors());
+// middleWare
+app.use(
+  cors({
+    origin: [
+      "https://online-study-explore.web.app",
+      "https://online-study-explore.firebaseapp.com",
+      'http://localhost:5173'
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
+// verify token
+const verifyToken = async (req, res, next) => {
+  try {
+    const token = req.cookies?.Token;
+    //Token As a middleware;
+    if (!token) {
+      return res.status(401).send({ massage: "unAuthorize" });
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+      if (err) {
+        // Token verification failed
+        return res.status(401).send({ massage: "unAuthorize" });
+      }
+      req.user = decoded;
+      next();
+    });
+  } catch (err) {
+    console.log("I am Under Verify", err);
+  }
+};
 
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASS}@cluster0.iatiqfv.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -25,12 +58,47 @@ async function run() {
     await client.connect();
 
     //               <---------------Work For Database Data------------------>
-
+    
     const bookingCollection = client.db("HotelBooking").collection("Rooms");
     const addbookingCollection = client.db("HotelBooking").collection("books");
     const offerbookingCollection = client
-      .db("HotelBooking")
-      .collection("offer");
+    .db("HotelBooking")
+    .collection("offer");
+    
+    //               <---------------Start Token For Database Data------------------>
+        // Auth Related Access Token
+        app.post("/jwt", async (req, res) => {
+          try {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+              expiresIn: "1h",
+            });
+            // const age = 1000;
+            res
+              .cookie("Token", token, {
+                httpOnly: true,
+                secure: false,
+                // maxAge:age,
+              })
+              .send({ Success: "Cookies Set Successfully" });
+          } catch (error) {
+            console.log("Error Post Jwt Token :", error);
+          }
+        });
+    
+        // Remove Token
+        app.post("/logout-jwt", async (req, res) => {
+          try {
+            res
+              .clearCookie("Token", { maxAge: 0 })
+              .send({ Success: "Cookies Removed Successfully" });
+          } catch (error) {
+            console.log("Error Post logOut-Jwt Token:", error);
+          }
+        });
+    //               <---------------End Token For Database Data------------------>
+
+
 
     app.get("/Bookings", async (req, res) => {
       const result = await bookingCollection.find().toArray();
@@ -53,12 +121,13 @@ async function run() {
     app.patch("/Bookings/:id", async (req, res) => {
       try {
         const id = req.params.id;
+        const data = req.body;
 
         const query = { _id: new ObjectId(id) };
         const options = { upsert: true };
         const updateDoc = {
           $set: {
-            roomAvailability: 0,
+            roomAvailability: data.roomAvailability - 1,
           },
         };
 
@@ -76,7 +145,7 @@ async function run() {
       }
     });
 
-
+  
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
