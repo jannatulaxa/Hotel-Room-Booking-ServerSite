@@ -8,7 +8,6 @@ const port = process.env.PORT || 5001;
 app.use(cors());
 app.use(express.json());
 
-
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.USER_PASS}@cluster0.iatiqfv.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -25,10 +24,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-
     //               <---------------Work For Database Data------------------>
-
-
 
     const bookingCollection = client.db("HotelBooking").collection("Rooms");
     const addbookingCollection = client.db("HotelBooking").collection("books");
@@ -36,11 +32,7 @@ async function run() {
       .db("HotelBooking")
       .collection("offer");
 
-
-
-
     app.get("/Bookings", async (req, res) => {
-  
       const result = await bookingCollection.find().toArray();
       res.send(result);
     });
@@ -51,15 +43,44 @@ async function run() {
       res.send(result);
     });
 
+    app.post("/books", async (req, res) => {
+      const booking = req.body;
 
+      const result = await addbookingCollection.insertOne(booking);
+      res.send(result);
+    });
+    // update Bookings Availability By id in Update Route
+    app.patch("/Bookings/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
 
+        const query = { _id: new ObjectId(id) };
+        const options = { upsert: true };
+        const updateDoc = {
+          $set: {
+            roomAvailability: 0,
+          },
+        };
+
+        const result = await bookingCollection.updateOne(
+          query,
+          updateDoc,
+          options
+        );
+        res.send(result);
+      } catch (error) {
+        console.log(
+          "update Bookings Availability By id in Update Route:",
+          error
+        );
+      }
+    });
 
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
-  
   }
 }
 run().catch(console.dir);
