@@ -13,7 +13,7 @@ app.use(
     origin: [
       "https://online-study-explore.web.app",
       "https://online-study-explore.firebaseapp.com",
-      'http://localhost:5173'
+      "http://localhost:5173",
     ],
     credentials: true,
   })
@@ -58,47 +58,45 @@ async function run() {
     await client.connect();
 
     //               <---------------Work For Database Data------------------>
-    
+
     const bookingCollection = client.db("HotelBooking").collection("Rooms");
     const addbookingCollection = client.db("HotelBooking").collection("books");
     const offerbookingCollection = client
-    .db("HotelBooking")
-    .collection("offer");
-    
+      .db("HotelBooking")
+      .collection("offer");
+
     //               <---------------Start Token For Database Data------------------>
-        // Auth Related Access Token
-        app.post("/jwt", async (req, res) => {
-          try {
-            const user = req.body;
-            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-              expiresIn: "1h",
-            });
-            // const age = 1000;
-            res
-              .cookie("Token", token, {
-                httpOnly: true,
-                secure: false,
-                // maxAge:age,
-              })
-              .send({ Success: "Cookies Set Successfully" });
-          } catch (error) {
-            console.log("Error Post Jwt Token :", error);
-          }
+    // Auth Related Access Token
+    app.post("/jwt", async (req, res) => {
+      try {
+        const user = req.body;
+        const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+          expiresIn: "1h",
         });
-    
-        // Remove Token
-        app.post("/logout-jwt", async (req, res) => {
-          try {
-            res
-              .clearCookie("Token", { maxAge: 0 })
-              .send({ Success: "Cookies Removed Successfully" });
-          } catch (error) {
-            console.log("Error Post logOut-Jwt Token:", error);
-          }
-        });
+
+        res
+          .cookie("Token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production" ? true : false,
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          })
+          .send({ Success: "Cookies Set Successfully" });
+      } catch (error) {
+        console.log("Error Post Jwt Token :", error);
+      }
+    });
+
+    // Remove Token
+    app.post("/logout-jwt", async (req, res) => {
+      try {
+        res
+          .clearCookie("Token", { maxAge: 0 })
+          .send({ Success: "Cookies Removed Successfully" });
+      } catch (error) {
+        console.log("Error Post logOut-Jwt Token:", error);
+      }
+    });
     //               <---------------End Token For Database Data------------------>
-
-
 
     app.get("/Bookings", async (req, res) => {
       const result = await bookingCollection.find().toArray();
@@ -144,8 +142,126 @@ async function run() {
         );
       }
     });
+    // update Bookings Availability By id in Update Route
+    app.patch("/BookingsRating/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const data = req.body;
+        const query = { _id: new ObjectId(id) };
+        console.log(data);
+        const options = { upsert: true };
+        const updateDoc = {
+          $set: {
+            Rating: data.Rating,
+            Review: data.Review,
+          },
+        };
 
-  
+        const result = await bookingCollection.updateOne(
+          query,
+          updateDoc,
+          options
+        );
+        res.send(result);
+      } catch (error) {
+        console.log(
+          "update Bookings Availability By id in Update Route:",
+          error
+        );
+      }
+    });
+
+    app.get("/books", async (req, res) => {
+      const cursor = addbookingCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.delete("/books/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const result = await addbookingCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //     app.get("/offer", async (req, res) => {
+    //       const cursor = offerbookingCollection.find();
+    //       const result = await cursor.toArray();
+    //       res.send(result);
+    //       // res.send({
+    //       //   total:result.length,result
+    //       //  })
+    //     });
+
+    //     app.get("/Bookings/:id", async (req, res) => {
+    //       const id = req.params.id;
+    //       const query = { _id: new ObjectId(id) };
+    //       const options = {
+    //         projection: {
+    //           roomDescription: 1,
+    //           price: 1,
+    //           roomSize: 1,
+    //           availability: 1,
+    //           roomImages: 1,
+    //           specialOffers: 1,
+    //         },
+    //       };
+    //       const result = await bookingCollection.findOne(query, options);
+    //       res.send(result);
+    //     });
+
+    //     app.get("/books/:id", async (req, res) => {
+    //       const id = req.params.id;
+    //       const query = { _id: new ObjectId(id) };
+
+    //       const result = await addbookingCollection.findOne(query);
+    //       res.send(result);
+    //     });
+
+    //     app.put("/books/:id", async (req, res) => {
+    //       const id = req.params.id;
+    //       console.log(id);
+    //       const filter = { _id: new ObjectId(id) };
+    //       const options = { upsert: true };
+    //       const upDateBooks = req.body;
+    //       const updateDate = {
+    //         $set: {
+    //           date: upDateBooks.date,
+    //         },
+    //       };
+    //       const result = await addbookingCollection.updateOne(
+    //         filter,
+    //         updateDate,
+    //         options
+    //       );
+    //       res.send(result);
+    //     });
+
+    //     app.put("/Bookings/:id", async (req, res) => {
+    //       const id = req.params.id;
+    //       console.log(id);
+    //       const filter = { _id: new ObjectId(id) };
+    //       const options = { upsert: true };
+    //       const upDateBooks = req.body;
+    //       const updateDate = {
+    //         $set: {
+    //           description: upDateBooks.description,
+    //           Roomsize: upDateBooks.Roomsize,
+    //           price: upDateBooks.price,
+    //           availability: upDateBooks.availability,
+    //           specialOffers: upDateBooks.specialOffers,
+    //           roomImages: upDateBooks.roomImages,
+    //         },
+    //       };
+    //       const result = await bookingCollection.updateOne(
+    //         filter,
+    //         updateDate,
+    //         options
+    //       );
+    //       res.send(result);
+    //     });
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
