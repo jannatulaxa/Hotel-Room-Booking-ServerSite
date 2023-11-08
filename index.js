@@ -11,8 +11,8 @@ const port = process.env.PORT || 5001;
 app.use(
   cors({
     origin: [
-      "https://online-study-explore.web.app",
-      "https://online-study-explore.firebaseapp.com",
+      "https://hotel-booking-web-c8f4f.web.app",
+      "https://hotel-booking-web-c8f4f.firebaseapp.com",
       "http://localhost:5173",
     ],
     credentials: true,
