@@ -129,6 +129,7 @@ async function run() {
           updateDoc,
           options
         );
+        console.log(result,"update Bookings Availability By id in Update Route")
         res.send(result);
       } catch (error) {
         console.log(
@@ -137,95 +138,40 @@ async function run() {
         );
       }
     });
-    // // update Bookings Availability By id in Update Route
-    // app.patch("/BookingsRating/:id", async (req, res) => {
-    //   try {
-    //     const id = req.params.id;
-    //     const data = req.body;
-    //     const query = { _id: new ObjectId(id) };
-    //     console.log(data);
-    //     const options = { upsert: true };
-    //     const updateDoc = {
-    //       $set: {
-    //         Rating: data.Rating,
-    //         Review: data.Review,
-    //       },
-    //     };
-
-    //     const result = await bookingCollection.updateOne(
-    //       query,
-    //       updateDoc,
-    //       options
-    //     );
-    //     res.send(result);
-    //   } catch (error) {
-    //     console.log(
-    //       "update Bookings Availability By id in Update Route:",
-    //       error
-    //     );
-    //   }
-    // });
 
     app.get("/books", async (req, res) => {
       const cursor = addbookingCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
-    // app.get("/books/:id", async (req, res) => {
-
-    //   const result = await addbookingCollection.findOne();
-    //   res.send(result);
-    // });
 
     app.delete("/books/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id:(id) };
-
+      const query = { _id: new ObjectId(id) };
       const result = await addbookingCollection.deleteOne(query);
-      console.log(result)
       res.send(result);
     });
-
-    // // Post Review
-    // app.post("/Review", async (req, res) => {
-    //   const rate = req.body;
-    //   console.log( rate)
-    //   const result = await Rating.insertOne(rate);
-    //   res.send(result);
-    // });
-
-    // app.get("/Review", async (req, res) => {
-    //   // const rate = req.body;
-    //   // console.log( rate)
-    //   const result = await Rating.estimatedDocumentCount();
-    //   console.log(result)
-    //   // res.send(result);
-    // });
 
     // update Bookings Rating By id in Update Route
     app.patch("/booksRating/:id", async (req, res) => {
       try {
-
         const data = req.body;
-        console.log( data);
-        console.log(data)
+        const query = { _id: new ObjectId(data.id) };
 
-        const query = { _id: new ObjectId(data.id.id) };
-        console.log(query)
         const options = { upsert: true };
         const updateDoc = {
           $set: {
-            count: 0,
-          
+            count: data.count + 1,
           },
         };
+        console.log(data,query)
 
         const result = await bookingCollection.updateOne(
           query,
           updateDoc,
           options
         );
-        console.log(result)
+        console.log(result,"update Bookings Availability By id in Update Route TUT TUT TUT");
         res.send(result);
       } catch (error) {
         console.log(
@@ -235,82 +181,34 @@ async function run() {
       }
     });
 
-    //     app.get("/offer", async (req, res) => {
-    //       const cursor = offerbookingCollection.find();
-    //       const result = await cursor.toArray();
-    //       res.send(result);
-    //       // res.send({
-    //       //   total:result.length,result
-    //       //  })
-    //     });
+    // update Bookings Availability By id in Update Route
+    app.patch("/Bookings/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const data = req.body;
+        console.log(data);
+        res.send(result,"TUT TUT TUT ");
+        // const query = { _id: new ObjectId(id) };
+        // const options = { upsert: true };
+        // const updateDoc = {
+        //   $set: {
+        //     roomAvailability: data.roomAvailability + 1,
+        //   },
+        // };
 
-    //     app.get("/Bookings/:id", async (req, res) => {
-    //       const id = req.params.id;
-    //       const query = { _id: new ObjectId(id) };
-    //       const options = {
-    //         projection: {
-    //           roomDescription: 1,
-    //           price: 1,
-    //           roomSize: 1,
-    //           availability: 1,
-    //           roomImages: 1,
-    //           specialOffers: 1,
-    //         },
-    //       };
-    //       const result = await bookingCollection.findOne(query, options);
-    //       res.send(result);
-    //     });
-
-    //     app.get("/books/:id", async (req, res) => {
-    //       const id = req.params.id;
-    //       const query = { _id: new ObjectId(id) };
-
-    //       const result = await addbookingCollection.findOne(query);
-    //       res.send(result);
-    //     });
-
-    //     app.put("/books/:id", async (req, res) => {
-    //       const id = req.params.id;
-    //       console.log(id);
-    //       const filter = { _id: new ObjectId(id) };
-    //       const options = { upsert: true };
-    //       const upDateBooks = req.body;
-    //       const updateDate = {
-    //         $set: {
-    //           date: upDateBooks.date,
-    //         },
-    //       };
-    //       const result = await addbookingCollection.updateOne(
-    //         filter,
-    //         updateDate,
-    //         options
-    //       );
-    //       res.send(result);
-    //     });
-
-    //     app.put("/Bookings/:id", async (req, res) => {
-    //       const id = req.params.id;
-    //       console.log(id);
-    //       const filter = { _id: new ObjectId(id) };
-    //       const options = { upsert: true };
-    //       const upDateBooks = req.body;
-    //       const updateDate = {
-    //         $set: {
-    //           description: upDateBooks.description,
-    //           Roomsize: upDateBooks.Roomsize,
-    //           price: upDateBooks.price,
-    //           availability: upDateBooks.availability,
-    //           specialOffers: upDateBooks.specialOffers,
-    //           roomImages: upDateBooks.roomImages,
-    //         },
-    //       };
-    //       const result = await bookingCollection.updateOne(
-    //         filter,
-    //         updateDate,
-    //         options
-    //       );
-    //       res.send(result);
-    //     });
+        // const result = await bookingCollection.updateOne(
+        //   query,
+        //   updateDoc,
+        //   options
+        // );
+        // res.send(result);
+      } catch (error) {
+        console.log(
+          "update Bookings Availability By id in Update Route:",
+          error
+        );
+      }
+    });
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
